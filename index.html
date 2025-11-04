@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Lista Leandro & Bianca</title>
+<style>
+  :root{--bg:#fffaf6;--accent:#7b2cbf;--muted:#6b6b6b;--card:#ffffff;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:#222;padding:20px;display:flex;justify-content:center}
+  .wrap{width:100%;max-width:1100px}
+  header{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+  .logo{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#ff6f00);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:20px}
+  h1{margin:0;font-size:20px}
+  p.lead{margin:4px 0 0;color:var(--muted);font-size:14px}
+  .controls{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:16px 0}
+  .left{display:flex;gap:8px;align-items:center}
+  input.search{padding:10px 12px;border-radius:10px;border:1px solid #eee;width:300px}
+  button.btn{background:var(--accent);color:#fff;padding:10px 12px;border-radius:10px;border:none;cursor:pointer;font-weight:700}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+  .card{background:var(--card);border-radius:12px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,0.06);display:flex;flex-direction:column;gap:8px;overflow:hidden}
+  .thumb{width:100%;height:160px;border-radius:10px;object-fit:cover;background:#f3f3f3}
+  .meta{display:flex;flex-direction:column;gap:8px}
+  .name{font-weight:700;color:#2b2b2b;font-size:15px;line-height:1.3}
+  .desc{color:var(--muted);font-size:13px;line-height:1.4;margin-bottom:8px}
+  .price{font-weight:800;color:#111;font-size:16px}
+  .reserve{padding:10px;border-radius:10px;border:none;background:linear-gradient(90deg,var(--accent),#ff6f00);color:#fff;font-weight:800;cursor:pointer}
+  .reserve[disabled]{opacity:.6;cursor:default;background:#94a3b8}
+  .pix-btn{padding:12px;border-radius:10px;border:none;background:linear-gradient(90deg,#32BCAD,#5CE1E6);color:#fff;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:auto}
+  .pix-btn[disabled]{opacity:.6;cursor:default;background:#94a3b8}
+  .panel{margin-top:18px;background:#fff;border-radius:12px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,0.04)}
+  .reservations{max-height:260px;overflow:auto;margin-bottom:8px}
+  .res-item{display:flex;justify-content:space-between;padding:8px;border-bottom:1px dashed #f0f0f0;font-size:14px}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:40}
+  .modal{background:#fff;border-radius:12px;padding:18px;max-width:420px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,0.25)}
+  .modal h3{margin:0 0 8px 0}
+  .modal input{width:100%;padding:10px;border-radius:8px;border:1px solid #e6e6e6;margin-top:10px}
+  .row{display:flex;gap:8px;margin-top:12px}
+  .small{font-size:13px;padding:8px 10px;border-radius:8px;border:1px solid #eee;background:transparent;cursor:pointer}
+  .pix-cta{position:fixed;right:18px;bottom:18px;background:linear-gradient(90deg,#32BCAD,#5CE1E6);padding:12px 16px;border-radius:999px;color:#08101a;font-weight:800;box-shadow:0 10px 30px rgba(92,225,230,0.18);cursor:pointer;z-index:50}
+  canvas.conf{pointer-events:none;position:fixed;inset:0;z-index:60}
+  .pix-icon{width:18px;height:18px;background:#fff;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold}
+  .picpay-icon{width:24px;height:24px;background:#11C76F;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:12px}
+  .payment-header{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:15px}
+  .payment-options{display:flex;flex-direction:column;gap:10px;margin-top:15px}
+  .payment-option{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid #eee;border-radius:10px;cursor:pointer;transition:all 0.2s}
+  .payment-option:hover{background:#f9f9f9}
+  .payment-option.selected{background:#f0f9ff;border-color:#32BCAD}
+  .payment-icon{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:bold;color:white}
+  .picpay{background:linear-gradient(135deg, #11C76F, #0A9C52)}
+  .nubank{background:linear-gradient(135deg, #8A05BE, #6A00A3)}
+  .itau{background:linear-gradient(135deg, #FF6200, #E55700)}
+  .bradesco{background:linear-gradient(135deg, #CC092F, #A50725)}
+  .payment-name{font-weight:600;font-size:14px}
+  .payment-desc{font-size:12px;color:var(--muted)}
+  
+  /* Melhorias no alinhamento do texto */
+  .modal-content{text-align:center}
+  .qr-section{margin:0 auto 15px;display:flex;flex-direction:column;align-items:center}
+  .pix-key-section{background:#f9f9f9;border-radius:10px;padding:12px;margin:15px 0;text-align:center}
+  .pix-key-label{font-size:12px;color:var(--muted);margin-bottom:5px;display:block}
+  .pix-key-value{font-weight:700;font-size:16px;word-break:break-all}
+  .payment-instructions{text-align:left;margin:15px 0}
+  .payment-option-content{flex:1;text-align:left}
+  
+  /* Layout melhorado dos cards */
+  .card-content{display:flex;flex-direction:column;height:100%}
+  .text-content{flex:1;margin-bottom:12px}
+  .action-area{margin-top:auto}
+  
+  /* Estilo para valor total */
+  .total-value{font-weight:800;color:var(--accent);font-size:16px}
+  
+  @media(max-width:800px){
+    input.search{width:100%}
+    .controls{flex-direction:column;align-items:stretch}
+    .left{justify-content:space-between}
+    header{flex-direction:column;text-align:center}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">LB</div>
+    <div>
+      <h1>Lista Leandro & Bianca </h1>
+      
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="left">
+      <input id="search" class="search" placeholder="Pesquisar (ex: cafeteira, tábua, edredom)"/>
+      <button id="clear" class="small">Limpar</button>
+      <button id="reset" class="small">Resetar reservas</button>
+    </div>
+    <div>
+      <button id="exportJson" class="btn">Exportar reservas (JSON)</button>
+    </div>
+  </div>
+
+  <main>
+    <section>
+      <div id="grid" class="grid"></div>
+    </section>
+
+    <aside style="margin-top:18px">
+      <div class="panel">
+        <h3>Reservas atuais</h3>
+        <div class="reservations" id="reservations"><div style="color:var(--muted)">Nenhuma reserva ainda.</div></div>
+        <div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
+          <div style="color:var(--muted)">
+            Total reservado: <strong id="count">0</strong> itens<br>
+            Valor total: <strong id="totalValue" class="total-value">R$ 0,00</strong>
+          </div>
+          <div>
+            <button id="copyList" class="small">Copiar lista</button>
+            <button id="openPix" class="small">Ver chave PIX</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<!-- modal reserva -->
+<div id="modal" class="modal-bg">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h3 id="modalTitle">Reservar presente</h3>
+    <div id="modalDesc" style="color:var(--muted);font-size:13px;margin-top:6px"></div>
+    <input id="guestName" placeholder="Seu nome completo (ex: João Silva)"/>
+    <div class="row">
+      <button id="confirmBtn" class="btn">Confirmar</button>
+      <button id="cancelBtn" class="btn small">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- pix modal -->
+<div id="pixModal" class="modal-bg">
+  <div class="modal">
+    <div class="modal-content">
+      <div class="payment-header">
+        <div class="picpay-icon">P</div>
+        <h3 style="margin:0">Presentear via PIX</h3>
+      </div>
+      
+      <p style="color:var(--muted);margin-bottom:15px;text-align:center">
+        Escaneie o QR Code ou copie a chave PIX:
+      </p>
+      
+      <div class="qr-section">
+        <img id="qrImg" src="" alt="QR Code PIX" style="width:220px;height:220px;border-radius:10px;object-fit:cover;border:1px solid #eee"/>
+      </div>
+      
+      <div class="pix-key-section">
+        <span class="pix-key-label">Chave PIX (telefone):</span>
+        <div id="pixKey" class="pix-key-value">(19) 98940-9943</div>
+        <div style="margin-top:8px;padding:8px;background:#e8f5e8;border-radius:6px">
+          <span style="font-size:12px;color:#2e7d32">Valor do presente:</span>
+          <div id="itemPrice" style="font-weight:700;font-size:18px;color:#2e7d32">R$ 0,00</div>
+        </div>
+      </div>
+      
+      <div class="payment-instructions">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:10px;text-align:center">
+          Selecione seu app preferido para pagar:
+        </p>
+        
+        <div class="payment-options">
+          <div class="payment-option selected">
+            <div class="payment-icon picpay">P</div>
+            <div class="payment-option-content">
+              <div class="payment-name">PicPay</div>
+              <div class="payment-desc">Abra o app e escaneie o QR Code</div>
+            </div>
+          </div>
+          <div class="payment-option">
+            <div class="payment-icon nubank">N</div>
+            <div class="payment-option-content">
+              <div class="payment-name">Nubank</div>
+              <div class="payment-desc">Pix → Pagar com QR Code</div>
+            </div>
+          </div>
+          <div class="payment-option">
+            <div class="payment-icon itau">I</div>
+            <div class="payment-option-content">
+              <div class="payment-name">Itaú</div>
+              <div class="payment-desc">Pix → Ler QR Code</div>
+            </div>
+          </div>
+          <div class="payment-option">
+            <div class="payment-icon bradesco">B</div>
+            <div class="payment-option-content">
+              <div class="payment-name">Bradesco</div>
+              <div class="payment-desc">Pix → QR Code</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:15px">
+        <button id="copyPix" class="btn small">Copiar chave PIX</button>
+        <button id="copyPixWithValue" class="btn small">Copiar chave + valor</button>
+        <button id="closePix" class="btn small">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<canvas id="confetti" class="conf"></canvas>
+
+<script>
+/* ===== Util: gerar DataURI Base64 para um SVG simples (meme-style) =====
+   Gera imagens SVG dinamicamente e codifica em Base64 para uso offline.
+*/
+function svgToDataUrlBase64(svgString){
+  // safe encode for Unicode
+  const utf8 = unescape(encodeURIComponent(svgString));
+  const b64 = btoa(utf8);
+  return 'data:image/svg+xml;base64,' + b64;
+}
+
+function makeMemeSVG(title, subtitle, bgColor='#ffd166', fg='#222'){
+  // SVG with title and subtitle; keeps small size
+  const svg = `
+  <svg xmlns='http://www.w3.org/2000/svg' width='1200' height='800' viewBox='0 0 1200 800'>
+    <rect width='100%' height='100%' fill='${bgColor}' rx='28' />
+    <g font-family='Segoe UI, Roboto, Arial, sans-serif'>
+      <rect x='24' y='24' width='1152' height='160' rx='12' fill='rgba(0,0,0,0.06)' />
+      <text x='600' y='110' font-size='56' text-anchor='middle' fill='${fg}' font-weight='800'>${escapeXml(title)}</text>
+      <g transform='translate(40,220)'>
+        <rect width='1120' height='520' rx='18' fill='white' />
+        <text x='560' y='120' font-size='46' text-anchor='middle' fill='${fg}' font-weight='700'>${escapeXml(subtitle)}</text>
+        <text x='560' y='200' font-size='28' text-anchor='middle' fill='#6b6b6b'>Meme Chic — presente engraçado</text>
+        <g transform='translate(460,260)'>
+          <circle cx='120' cy='120' r='100' fill='${adjustColor(bgColor,-20)}' />
+          <text x='120' y='135' font-size='60' text-anchor='middle' fill='${fg}'>😂</text>
+        </g>
+      </g>
+    </g>
+  </svg>`;
+  return svgToDataUrlBase64(svg);
+}
+
+function escapeXml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function adjustColor(hex, amt){
+  // simple hex adjust +/-
+  hex = hex.replace('#','');
+  if(hex.length===3) hex = hex.split('').map(c=>c+c).join('');
+  let num = parseInt(hex,16);
+  let r = (num >> 16) + amt; r = Math.max(0,Math.min(255,r));
+  let g = ((num >> 8) & 0x00FF) + amt; g = Math.max(0,Math.min(255,g));
+  let b = (num & 0x0000FF) + amt; b = Math.max(0,Math.min(255,b));
+  return '#' + ( (1<<24) + (r<<16) + (g<<8) + b ).toString(16).slice(1);
+}
+
+/* ===== Dados (60 presentes) ===== */
+const ITEMS = [
+  {id:1, title:"Kit Café 'Sem paciência'", desc:"Café forte + caneca meme — salva relacionamentos", price:"R$ 49,90"},
+  {id:2, title:"Air Fryer (versão mito)", desc:"Fritura sem culpa — e sem óleo", price:"R$ 399,00"},
+  {id:3, title:"Tábua BBQ 'Ele assa, ela julga'", desc:"Tábua de churrasco estilo casal", price:"R$ 139,00"},
+  {id:4, title:"Canecas 'Sr. Sempre Certo'", desc:"Par de canecas com zoeira fina", price:"R$ 39,90"},
+  {id:5, title:"Cobertor Guerra do Cobertor", desc:"Manta dupla anti-roubo", price:"R$ 159,00"},
+  {id:6, title:"Faqueiro elegante", desc:"Comer com classe (ou fingir)", price:"R$ 129,00"},
+  {id:7, title:"Kit Sobrevivência DR", desc:"Bombom + bilhete 'me desculpa'", price:"R$ 59,90"},
+  {id:8, title:"Cofrinho: Fundo 'Reconciliação'", desc:"Poupança para viagens (ou pizza)", price:"R$ 39,90"},
+  {id:9, title:"Microfone Karaokê", desc:"Para cantar e pedir perdão", price:"R$ 89,00"},
+  {id:10, title:"Jogo 'Quem lava a louça?'", desc:"Decisões justas (ou não)", price:"R$ 29,90"},
+  {id:11, title:"Kit Temperos: Paciência", desc:"Tempero secreto: paciência", price:"R$ 49,90"},
+  {id:12, title:"Tapete 'Bem-vindo ao covil'", desc:"Entrada com personalidade", price:"R$ 89,90"},
+  {id:13, title:"Quadro 'Lar Doce Lar — Edição Casamento'", desc:"Decoração com humor", price:"R$ 119,00"},
+  {id:14, title:"Taças 'Vinho = Terapia'", desc:"Brinde pós-DR", price:"R$ 79,90"},
+  {id:15, title:"Kit Cinema 'Netflix & Perdão'", desc:"Manta + pipoca + bilhete", price:"R$ 59,90"},
+  {id:16, title:"Tábua Petiscos Terapia", desc:"Petiscos para reconciliações", price:"R$ 89,90"},
+  {id:17, title:"Edredom Super Confort", desc:"Aquecimento em dobro", price:"R$ 229,00"},
+  {id:18, title:"Porta-chaves 'Não esquece de me amar'", desc:"Lembrete diário", price:"R$ 29,90"},
+  {id:19, title:"Sanduicheira 'Café da manhã'", desc:"Para fome imediata", price:"R$ 129,90"},
+  {id:20, title:"Relógio de Parede 'Atrasados mas juntos'", desc:"Decoração e desculpas", price:"R$ 69,90"},
+  {id:21, title:"Potes Organizadores", desc:"Guardar comida, guardar ressentimentos", price:"R$ 49,90"},
+  {id:22, title:"Mixer Turbo", desc:"Batidas e resoluções", price:"R$ 119,00"},
+  {id:23, title:"Ventilador 'Paz térmica'", desc:"Cada um com sua brisa", price:"R$ 179,00"},
+  {id:24, title:"Ferro de passar (para ocasiões)", desc:"Roupas lisas, papo torto", price:"R$ 99,90"},
+  {id:25, title:"Mixer de mão", desc:"Cozinha prática", price:"R$ 79,90"},
+  {id:26, title:"Lixeira com estilo", desc:"Lixo com status", price:"R$ 59,90"},
+  {id:27, title:"Ralador gourmet", desc:"Queijo e risadas", price:"R$ 29,90"},
+  {id:28, title:"Panela elétrica multiuso", desc:"Arroz perfeito, casal imperfeito", price:"R$ 199,00"},
+  {id:29, title:"Conjunto de facas pro masterchef", desc:"Para cortar exageros", price:"R$ 149,00"},
+  {id:30, title:"Kit Spa Pós-DR", desc:"Velas, sais e desculpas", price:"R$ 69,90"},
+  {id:31, title:"Robô Aspirador 'Quem varre?'", desc:"Fim da discussão sobre limpeza", price:"R$ 599,00"},
+  {id:32, title:"Jogo de Panelas Antiaderente", desc:"Para não grudar nas brigas", price:"R$ 299,00"},
+  {id:33, title:"Liquidificador 'Mix de Paz'", desc:"Bate tudo, até as desavenças", price:"R$ 189,00"},
+  {id:34, title:"Jogo de Cama 'Cada um do seu lado'", desc:"Lençóis com divisória invisível", price:"R$ 219,00"},
+  {id:35, title:"Frigobar 'Meus lanches'", desc:"Para guardar suas coisas separadas", price:"R$ 459,00"},
+  {id:36, title:"Máquina de Lavar 'Lava Tudo'", desc:"Inclui mágoas passadas", price:"R$ 1299,00"},
+  {id:37, title:"Forno Elétrico 'Não esquenta'", desc:"Aquece comida, não a relação", price:"R$ 279,00"},
+  {id:38, title:"Jogo de Toalhas 'Sua e Minha'", desc:"Cada um com a sua cor", price:"R$ 89,90"},
+  {id:39, title:"Purificador de Água 'Fonte da Paz'", desc:"Água fresca para acalmar", price:"R$ 349,00"},
+  {id:40, title:"Cafeteira Expresso 'Despertador'", desc:"Para acordar bem humorado", price:"R$ 429,00"},
+  {id:41, title:"Grill Elétrico 'Churras em Paz'", desc:"Sem fumaça nos olhos", price:"R$ 199,00"},
+  {id:42, title:"Jogo de Travessas 'Festa da Paz'", desc:"Para servir reconciliações", price:"R$ 129,00"},
+  {id:43, title:"Processador de Alimentos 'Tudo resolvido'", desc:"Corta discussões em segundos", price:"R$ 259,00"},
+  {id:44, title:"Conjunto de Copos 'Brinde à Paz'", desc:"Celebre os momentos bons", price:"R$ 79,90"},
+  {id:45, title:"Tabuleiro de Xadrez 'Estratégia Conjugal'", desc:"Aprenda a ceder no jogo", price:"R$ 149,00"},
+  {id:46, title:"Abajur 'Luz Suave'", desc:"Iluminação para conversas calmas", price:"R$ 119,00"},
+  {id:47, title:"Adega de Vinho 'Terapia Líquida'", desc:"Para noites de reconciliação", price:"R$ 699,00"},
+  {id:48, title:"Conjunto de Pratos 'Comida Quente, Coração Quente'", desc:"Mantenha o amor aquecido", price:"R$ 189,00"},
+  {id:49, title:"Panela de Pressão 'Explosão Controlada'", desc:"Para evitar os estouros", price:"R$ 159,00"},
+  {id:50, title:"Jogo Americano 'Mesa da Paz'", desc:"Proteja a mesa das discussões", price:"R$ 49,90"},
+  {id:51, title:"Faqueiro de Sobremesa 'Doce Conviver'", desc:"Para momentos doces juntos", price:"R$ 69,90"},
+  {id:52, title:"Frigideira 'Antiaderente de Mágoas'", desc:"Nada gruda, nem rancores", price:"R$ 89,90"},
+  {id:53, title:"Conjunto de Xícaras 'Café da Manhã em Paz'", desc:"Comece o dia bem", price:"R$ 59,90"},
+  {id:54, title:"Jarra de Suco 'Refresque a Relação'", desc:"Bebida gelada para esfriar a cabeça", price:"R$ 39,90"},
+  {id:55, title:"Tabua de Queijos 'Harmonia Gastronômica'", desc:"Combinando sabores e sentimentos", price:"R$ 99,90"},
+  {id:56, title:"Faqueiro de Pão 'Pão Quentinho, Coração Mole'", desc:"Para cafés da manhã perfeitos", price:"R$ 49,90"},
+  {id:57, title:"Conjunto de Tigelas 'Mistura de Sentimentos'", desc:"Para receitas e reconciliações", price:"R$ 79,90"},
+  {id:58, title:"Porta Temperos 'Temperando o Amor'", desc:"Organize os temperos da relação", price:"R$ 69,90"},
+  {id:59, title:"Jogo de Colheres de Pau 'Mexendo a Relação'", desc:"Para misturar tudo e dar certo", price:"R$ 29,90"},
+  {id:60, title:"Faqueiro de Salada 'Frescor no Relacionamento'", desc:"Mantenha tudo fresco e leve", price:"R$ 89,90"}
+];
+
+/* ===== Render e reserva (localStorage) ===== */
+const grid = document.getElementById('grid');
+const search = document.getElementById('search');
+const reservationsEl = document.getElementById('reservations');
+const countEl = document.getElementById('count');
+const totalValueEl = document.getElementById('totalValue');
+const modal = document.getElementById('modal');
+const modalTitle = document.getElementById('modalTitle');
+const modalDesc = document.getElementById('modalDesc');
+const guestName = document.getElementById('guestName');
+const confirmBtn = document.getElementById('confirmBtn');
+const cancelBtn = document.getElementById('cancelBtn');
+const pixModal = document.getElementById('pixModal');
+const qrImg = document.getElementById('qrImg');
+const pixKeyEl = document.getElementById('pixKey');
+const itemPriceEl = document.getElementById('itemPrice');
+const confettiCanvas = document.getElementById('confetti');
+
+let chosen = null;
+let reservations = JSON.parse(localStorage.getItem('meme_res') || '{}');
+
+// Cache para imagens SVG
+const imageCache = {};
+
+function renderGrid(){
+  const q = search.value.trim().toLowerCase();
+  grid.innerHTML = '';
+  ITEMS.forEach((it,index)=>{
+    if(q && !(it.title.toLowerCase().includes(q) || it.desc.toLowerCase().includes(q))) return;
+    
+    // Usar cache para evitar regeneração de imagens
+    const cacheKey = `${it.id}-${index}`;
+    if (!imageCache[cacheKey]) {
+      // generate a color for SVG (deterministic)
+      const colors = ['#ffd166','#ff6f61','#a2d2ff','#cdb4db','#bde0a8','#ffe066','#a0c4ff','#ffc6ff'];
+      const bgColor = colors[index % colors.length];
+      imageCache[cacheKey] = makeMemeSVG(it.title, it.desc, bgColor);
+    }
+    
+    const imgData = imageCache[cacheKey];
+    const reservedBy = Object.values(reservations).find(v=>v.id===it.id);
+    const isReserved = !!reservedBy;
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <img class="thumb" src="${imgData}" alt="${escapeHtml(it.title)}" loading="lazy" />
+      <div class="card-content">
+        <div class="text-content">
+          <div class="name">${escapeHtml(it.title)}</div>
+          <div class="desc">${escapeHtml(it.desc)}</div>
+          <div class="price">${it.price}</div>
+        </div>
+        <div class="action-area">
+          <button class="pix-btn" ${isReserved? 'disabled':''} data-id="${it.id}">
+            <span class="pix-icon">PIX</span>
+            ${isReserved? 'Presenteado ✅':'Presentear via PIX'}
+          </button>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+  renderReservations();
+}
+
+/* reservations list */
+function renderReservations(){
+  const entries = Object.entries(reservations);
+  reservationsEl.innerHTML = '';
+  if(entries.length===0){ 
+    reservationsEl.innerHTML = '<div style="color:var(--muted)">Nenhuma reserva ainda.</div>'; 
+    countEl.textContent='0'; 
+    totalValueEl.textContent='R$ 0,00';
+    return; 
+  }
+  
+  let totalValue = 0;
+  
+  entries.forEach(([k,o])=>{
+    const el = document.createElement('div');
+    el.className = 'res-item';
+    el.innerHTML = `<div>
+                      <div>${escapeHtml(o.name)} — <strong>${escapeHtml(o.title)}</strong></div>
+                      <div style="font-size:12px;color:var(--muted)">${o.price}</div>
+                    </div>
+                    <div><button class="small" data-id="${o.id}">Cancelar</button></div>`;
+    reservationsEl.appendChild(el);
+    
+    // Calcular valor total
+    const priceValue = parseFloat(o.price.replace('R$ ', '').replace(',', '.'));
+    totalValue += priceValue;
+  });
+  
+  countEl.textContent = String(entries.length);
+  totalValueEl.textContent = `R$ ${totalValue.toFixed(2).replace('.', ',')}`;
+  
+  // Adicionar event listeners para os botões de cancelar
+  document.querySelectorAll('#reservations .small').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const itemId = parseInt(this.getAttribute('data-id'));
+      cancelReservation(itemId);
+    });
+  });
+}
+
+/* open modal */
+function openReserve(id){
+  const it = ITEMS.find(x=>x.id===id);
+  if(!it) return;
+  chosen = it;
+  modalTitle.textContent = `Presentear: ${it.title}`;
+  modalDesc.textContent = it.desc + ' — ' + it.price;
+  guestName.value = '';
+  modal.style.display = 'flex';
+  guestName.focus();
+}
+
+/* click handling (delegation) */
+grid.addEventListener('click', (e)=>{
+  const btn = e.target.closest('button.pix-btn');
+  if(btn){
+    const id = Number(btn.dataset.id);
+    openReserve(id);
+  }
+});
+
+/* confirm reservation */
+confirmBtn.addEventListener('click', ()=>{
+  const name = guestName.value.trim();
+  if(!name){ alert('Digite seu nome 🙂'); guestName.focus(); return; }
+  const key = 'r' + Date.now();
+  reservations[key] = {
+    id: chosen.id, 
+    name, 
+    title: chosen.title, 
+    price: chosen.price,
+    when: new Date().toISOString()
+  };
+  localStorage.setItem('meme_res', JSON.stringify(reservations));
+  modal.style.display = 'none';
+  
+  // Abrir modal PIX após confirmar a reserva
+  openPix();
+  showConfetti();
+  renderGrid();
+});
+
+/* cancel reservation by item id */
+function cancelReservation(itemId){
+  for(const k in reservations){
+    if(reservations[k].id === itemId){
+      if(!confirm(`Remover reserva de "${reservations[k].title}" feita por ${reservations[k].name}?`)) return;
+      delete reservations[k];
+      localStorage.setItem('meme_res', JSON.stringify(reservations));
+      renderGrid();
+      return;
+    }
+  }
+  alert('Reserva não encontrada.');
+}
+
+/* modal controls */
+cancelBtn.addEventListener('click', ()=>{ modal.style.display = 'none'; });
+
+/* reset */
+document.getElementById('reset').addEventListener('click', ()=>{
+  if(confirm('Resetar todas as reservas?')){ 
+    localStorage.removeItem('meme_res'); 
+    reservations={}; 
+    renderGrid(); 
+  }
+});
+document.getElementById('clear').addEventListener('click', ()=>{ search.value=''; renderGrid(); });
+
+/* export JSON */
+document.getElementById('exportJson').addEventListener('click', ()=>{
+  const data = JSON.stringify(reservations, null, 2);
+  const blob = new Blob([data], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); 
+  a.href = url; 
+  a.download = 'reservas_meme_chic.json'; 
+  a.click(); 
+  URL.revokeObjectURL(url);
+});
+
+/* copy list text */
+document.getElementById('copyList').addEventListener('click', ()=>{
+  let txt = 'Reservas — Lista Meme Chic\n\n';
+  let totalValue = 0;
+  
+  Object.values(reservations).forEach(r=> {
+    txt += `${r.name} — ${r.title} (${r.price}) - ${new Date(r.when).toLocaleDateString('pt-BR')}\n`;
+    
+    // Calcular valor total
+    const priceValue = parseFloat(r.price.replace('R$ ', '').replace(',', '.'));
+    totalValue += priceValue;
+  });
+  
+  txt += `\nTotal: R$ ${totalValue.toFixed(2).replace('.', ',')}`;
+  
+  if(Object.keys(reservations).length===0) txt += 'Nenhuma reserva.';
+  navigator.clipboard.writeText(txt).then(()=> alert('Lista copiada!')).catch(()=> alert('Erro ao copiar.'));
+});
+
+/* PIX modal */
+document.getElementById('openPix').addEventListener('click', openPix);
+function openPix(){
+  const pixKey = '(19) 98940-9943';
+  const payload = encodeURIComponent('PIX:' + pixKey);
+  qrImg.src = `https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=${payload}`;
+  pixKeyEl.textContent = pixKey;
+  
+  // Mostrar o preço do item selecionado
+  if (chosen) {
+    itemPriceEl.textContent = chosen.price;
+  }
+  
+  pixModal.style.display = 'flex';
+}
+document.getElementById('closePix').addEventListener('click', ()=> pixModal.style.display = 'none');
+
+/* Copiar apenas a chave PIX */
+document.getElementById('copyPix').addEventListener('click', ()=> {
+  navigator.clipboard.writeText(pixKeyEl.textContent).then(()=> {
+    alert('Chave PIX copiada! Lembre-se de enviar o valor: ' + (chosen ? chosen.price : ''));
+  });
+});
+
+/* Copiar chave PIX com valor formatado para o banco */
+document.getElementById('copyPixWithValue').addEventListener('click', ()=> {
+  if (!chosen) return;
+  
+  // Extrair apenas números do preço
+  const priceValue = chosen.price.replace('R$ ', '').replace(',', '.');
+  const numericValue = parseFloat(priceValue).toFixed(2);
+  
+  // Criar texto formatado para facilitar no banco
+  const pixText = `Chave PIX: ${pixKeyEl.textContent}\nValor: R$ ${numericValue.replace('.', ',')}\nPresente: ${chosen.title}`;
+  
+  navigator.clipboard.writeText(pixText).then(()=> {
+    alert('Chave PIX e valor copiados!\n\nAo colar no banco, digite o valor: R$ ' + numericValue.replace('.', ','));
+  });
+});
+
+// Adicionar interatividade aos métodos de pagamento
+document.querySelectorAll('.payment-option').forEach(option => {
+  option.addEventListener('click', function() {
+    document.querySelectorAll('.payment-option').forEach(opt => {
+      opt.classList.remove('selected');
+    });
+    this.classList.add('selected');
+  });
+});
+
+/* confetti (simple) */
+function showConfetti(){
+  const canvas = confettiCanvas;
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth; 
+  canvas.height = window.innerHeight;
+  
+  const pieces = Array.from({length:120}, ()=>({
+    x: Math.random()*canvas.width,
+    y: -Math.random()*canvas.height,
+    r: Math.random()*6+3,
+    dy: Math.random()*3+2,
+    color: ['#ff6f00','#7b2cbf','#32BCAD','#11C76F'][Math.floor(Math.random()*4)]
+  }));
+  
+  let t=0;
+  function loop(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pieces.forEach(p=>{
+      p.y += p.dy;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+      if(p.y > canvas.height) p.y = -10;
+    });
+    t++;
+    if(t<200) requestAnimationFrame(loop);
+    else {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      canvas.style.display = 'none';
+    }
+  }
+  canvas.style.display = 'block';
+  loop();
+}
+
+/* helper escape */
+function escapeHtml(s){ 
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+/* init */
+renderGrid();
+search.addEventListener('input', renderGrid);
+
+/* allow clicking outside modal to close */
+document.querySelectorAll('.modal-bg').forEach(bg=>{
+  bg.addEventListener('click', (ev)=>{ 
+    if(ev.target===bg) bg.style.display='none'; 
+  });
+});
+document.addEventListener('keydown', e=>{ 
+  if(e.key==='Escape'){ 
+    document.querySelectorAll('.modal-bg').forEach(m=>m.style.display='none'); 
+  } 
+});
+
+// Otimização: Redimensionar canvas confetti quando a janela for redimensionada
+window.addEventListener('resize', () => {
+  if (confettiCanvas.style.display === 'block') {
+    confettiCanvas.width = window.innerWidth;
+    confettiCanvas.height = window.innerHeight;
+  }
+});
+</script>
+</body>
+</html>
